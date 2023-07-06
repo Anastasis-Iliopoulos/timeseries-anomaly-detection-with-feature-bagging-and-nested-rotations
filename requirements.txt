@@ -1,0 +1,12 @@
+matplotlib
+ipykernel
+tensorflow
+seaborn
+numpy
+Pillow
+pytz
+scikit-learn
+scipy
+arimafd
+tsad
+shap
