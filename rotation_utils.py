@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 
-np.random.seed(0)
-
 class Rotator():
     """Rotator"""
     def __init__(self):
@@ -31,6 +29,8 @@ class Rotator():
 
     def get_partitioned_data(self, data, number_of_subsets):
         number_of_features = data.shape[1]
+        if number_of_subsets//number_of_features < 2:
+            raise ValueError("Cannot partition {number_of_features} features into {number_of_subsets} subsets. Number_of_subsets/Number_of_features should be greated than 2.")
         random_permutation_feature_list = np.random.choice(number_of_features, number_of_features, replace=False).tolist()
         K = number_of_subsets
         N = int(len(random_permutation_feature_list)//K)
@@ -59,7 +59,8 @@ class Rotator():
         rotation_matrix = pca.components_
         return rotation_matrix
 
-    def fit(self, data, K=4, fraction=0.65):
+    def fit(self, df_data, K=2, fraction=0.75):
+        data = df_data.to_numpy()
         a_partition, permutation = self.get_partitioned_data(data, K)
         self.subsets = permutation
         for partition in a_partition:
@@ -68,7 +69,8 @@ class Rotator():
             self.rotation_matricies.append(rotation_matrix)
         return self
 
-    def transform(self, data):
+    def transform(self, df_data):
+        data = df_data.to_numpy()
         transformed_partitions = []
         for sub, rotation_matrix in zip(self.subsets, self.rotation_matricies):
             partition = np.array([data[:,i] for i in sub]).T
@@ -77,25 +79,5 @@ class Rotator():
         transformed_data_unordered = np.concatenate(transformed_partitions, axis=1)
         reverse_perm = self.reverse_permutation(self.subsets)
         transformed_data = transformed_data_unordered[:,reverse_perm]
+        transformed_data = pd.DataFrame(transformed_data, columns=df_data.columns.tolist(), index=df_data.index)
         return transformed_data
-
-
-    # def get_rotated_data(self, data, K=2, fraction=0.75):
-    #     a_partition, permutation = self.get_partitioned_data(data, K)
-        
-    #     # Apply transform and save rotation matrices
-    #     transformed_partitions = []
-    #     for partition in a_partition:
-    #         random_data = self.get_random_data(partition, fraction)
-    #         rotation_matrix = self.get_rotation_matrix(random_data)
-    #         transformed_partitions.append(np.dot(partition, rotation_matrix))
-        
-    #     transformed_data_unordered = np.concatenate(transformed_partitions, axis=1)
-
-    #     reverse_perm = self.reverse_permutation(permutation)
-
-    #     transformed_data = transformed_data_unordered[:,reverse_perm]
-    #     # transformed_data = pd.DataFrame(transformed_data_ordered, columns=data.columns.to_list())
-    #     # self.model.fit(new_X, y)
-    #     return transformed_data
-

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 class FeatureBagger():
     """FeatureBagger"""
@@ -12,6 +13,8 @@ class FeatureBagger():
         self.subset = sorted(np.random.choice(data.shape[1], number_of_features, replace=False).tolist())
         return self
 
-    def transform(self, data):
+    def transform(self, df_data):
+        data = df_data.to_numpy()
         transformed_data = data[:,self.subset]
+        transformed_data = pd.DataFrame(transformed_data, columns=[df_data.columns.tolist()[i] for i in self.subset], index=df_data.index)
         return transformed_data
