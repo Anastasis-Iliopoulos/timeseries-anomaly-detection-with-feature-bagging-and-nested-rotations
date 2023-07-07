@@ -141,6 +141,23 @@ def get_actual_scores_for_windows(residuals, df, X_df, N_STEPS, UCL, name_of_sco
     final_df = all_data_with_anomalies[[name_of_score_col, name_of_ucl_col]]
     return final_df
 
+def get_actual_scores_for_windows_2(residuals, df, X_df, N_STEPS, name_of_score_col):
+    anomalous_data = pd.DataFrame(pd.Series(residuals.values, index=df[N_STEPS-1:].index).fillna(0)).rename(columns={0:f"cur_score"})
+
+    for ind in range(1,N_STEPS):
+        anomalous_data[f"cur_score_{ind}"] = anomalous_data["cur_score"].shift(ind)
+
+    anomalous_data = anomalous_data.reset_index(drop=True)
+    anomalous_data = anomalous_data.iloc[:len(X_df) - N_STEPS + 1]
+
+    data_to_append = pd.DataFrame(pd.Series(0, index=df.index).fillna(0)).rename(columns={0:f"cur_score_init"}).reset_index(drop=True)
+    all_data = data_to_append.join(anomalous_data)
+    all_data = all_data.drop(["cur_score_init", "cur_score"], axis=1)
+    all_data["min_score"] = all_data.min(axis=1, skipna=False).fillna(0)
+    all_data_with_anomalies = pd.DataFrame(pd.Series(all_data["min_score"].values, index=df.index).fillna(0)).rename(columns={0: name_of_score_col})
+    final_df = all_data_with_anomalies[[name_of_score_col]]
+    return final_df
+
 def get_scores_scoring_with_current_window(original_X_data, residuals, N_STEPS, df_index):
     
     prediction = pd.Series(data=0, index=df_index)

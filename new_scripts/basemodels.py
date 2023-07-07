@@ -15,10 +15,11 @@ import utils
 import pandas as pd
 
 class AnomalyDetectionModel():
-    def __init__(self, model_name) -> None:
+    def __init__(self, model_name, task_name) -> None:
         self.model_name = model_name
         self.model = None
         self.UCL = None
+        self.anomaly_col = task_name
 
     ## AE
     def autoencoder(self, data):
@@ -271,8 +272,8 @@ class AnomalyDetectionModel():
             self.UCL = residuals_conv_ae.quantile(0.999)
         elif self.model_name.upper() == "LSTM":
             X_lstm, y_lstm = utils.split_sequences(data, 5)
-            self.model = self.lstm(X_lstm, y_lstm, f"rot_{task_name}")
-            self.model.load_weights(f"lstm_rot_{task_name}.h5")
+            self.model = self.lstm(X_lstm, y_lstm, f"{self.task_name}")
+            self.model.load_weights(f"{self.task_name}.h5")
             predictions_lstm = anomalyutils.get_lstm_predicts(self.model, X_lstm)
             residuals_lstm = anomalyutils.get_lstm_residuals(y_lstm, predictions_lstm)
             self.UCL = residuals_lstm.quantile(0.99)
@@ -291,37 +292,42 @@ class AnomalyDetectionModel():
         else:
             raise NotImplemented(f"{self.model_name} Not implemnted yet!")
         
-    def transform(self, data):
+    def transform(self, df_data):
         if self.model_name.upper() == "AE":
+            data = df_data.to_numpy()
             predictions_ae = anomalyutils.get_ae_predicts(self.model, data)
             residuals_autoencoder = anomalyutils.get_ae_residuals(data, predictions_ae)
-            prediction_labels_autoencoder = pd.DataFrame(pd.Series(residuals_autoencoder.values, index=data.index).fillna(0)).rename(columns={0:f"anomaly_by_autoencoder_rotation_task_{task_name}_score"})
-            prediction_labels_autoencoder[f"anomaly_by_autoencoder_rotation_task_{task_name}_ucl"] = 3/2*self.UCL
+            prediction_labels_autoencoder = pd.DataFrame(pd.Series(residuals_autoencoder.values, index=df_data.index).fillna(0)).rename(columns={0:f"anomaly_by_autoencoder_{self.task_name}_score"})
             return prediction_labels_autoencoder
         elif self.model_name.upper() == "CONV_AE":
+            data = df_data.to_numpy()
             X_conv_ae = utils.create_sequences(data, 60)
-            self.model = self.conv_ae(X_conv_ae)
             predictions_conv_ae = anomalyutils.get_conv_ae_predicts(self.model, X_conv_ae)
             residuals_conv_ae = anomalyutils.get_conv_ae_residuals(X_conv_ae, predictions_conv_ae)
-            self.UCL = residuals_conv_ae.quantile(0.999)
+            df_final = utils.get_actual_scores_for_windows_2(residuals_conv_ae, df_data, X_conv_ae, 60, f"anomaly_by_conv_ae_{self.task_name}_score")
+            return df_final
         elif self.model_name.upper() == "LSTM":
-            X_lstm, y_lstm = utils.split_sequences(data, 5)
-            self.model = self.lstm(X_lstm, y_lstm, f"rot_{task_name}")
-            self.model.load_weights(f"lstm_rot_{task_name}.h5")
+            X_all_rotated = df_data.to_numpy()
+            X_lstm, y_lstm = utils.split_sequences(X_all_rotated, 5)
             predictions_lstm = anomalyutils.get_lstm_predicts(self.model, X_lstm)
             residuals_lstm = anomalyutils.get_lstm_residuals(y_lstm, predictions_lstm)
-            self.UCL = residuals_lstm.quantile(0.99)
+            prediction_labels_lstm = pd.DataFrame(pd.Series(residuals_lstm.values, index=df_data[5:].index).fillna(0)).rename(columns={0:f"anomaly_by_lstm_{self.task_name}_score"})
+            df_to_append = pd.DataFrame(pd.Series(0, index=df_data[:5].index).fillna(0)).rename(columns={0:f"anomaly_by_lstm_{self.task_name}_score"})
+            df_final = pd.concat([df_to_append, prediction_labels_lstm], ignore_index=False)
+            return df_final
         elif self.model_name.upper() == "LSTM_AE":
-            X_lstm_ae = utils.create_sequences(data, 10)
-            self.model = self.lstm_ae(X_lstm_ae)
+            X_all_rotated = df_data.to_numpy()
+            X_lstm_ae = utils.create_sequences(X_all_rotated, 10)
             predictions_lstm_ae = anomalyutils.get_lstm_ae_predicts(self.model, X_lstm_ae)
             residuals_lstm_ae = anomalyutils.get_lstm_ae_residuals(X_lstm_ae, predictions_lstm_ae)
-            self.UCL = residuals_lstm_ae.quantile(0.99)
+            df_final = utils.get_actual_scores_for_windows_2(residuals_lstm_ae, df_data, X_lstm_ae, 10, f"anomaly_by_lstm_ae_{self.task_name}_score")
+            return df_final
         elif self.model_name.upper() == "LSTM_VAE":
-            X_lstm_vae = utils.create_sequences(data, 5)
-            self.model = self.lstm_vae(X_lstm_vae)
+            X_all_rotated = df_data.to_numpy()
+            X_lstm_vae = utils.create_sequences(X_all_rotated, 5)
             predictions_lstm_vae = anomalyutils.get_lstm_vae_predicts(self.model, X_lstm_vae)
             residuals_lstm_vae = anomalyutils.get_lstm_vae_residuals(X_lstm_vae, predictions_lstm_vae)
-            self.UCL = residuals_lstm_vae.quantile(0.999)
+            df_final = utils.get_actual_scores_for_windows_2(residuals_lstm_vae, df_data, X_lstm_vae, 5, f"anomaly_by_lstm_vae_{self.task_name}_score")
+            return df_final
         else:
             raise NotImplemented(f"{self.model_name} Not implemnted yet!")
