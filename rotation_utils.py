@@ -29,8 +29,8 @@ class Rotator():
 
     def get_partitioned_data(self, data, number_of_subsets):
         number_of_features = data.shape[1]
-        if number_of_subsets//number_of_features < 2:
-            raise ValueError("Cannot partition {number_of_features} features into {number_of_subsets} subsets. Number_of_subsets/Number_of_features should be greated than 2.")
+        if number_of_features//number_of_subsets < 2:
+            raise ValueError(f"Cannot partition {number_of_features} features into {number_of_subsets} subsets. Number_of_subsets/Number_of_features should be greated than 2.")
         random_permutation_feature_list = np.random.choice(number_of_features, number_of_features, replace=False).tolist()
         K = number_of_subsets
         N = int(len(random_permutation_feature_list)//K)

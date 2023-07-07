@@ -5,6 +5,7 @@ import utils
 import basemodels
 import anomalyutils
 import pandas as pd
+import scaling_utils
 import rotation_utils
 import bagging_utils
 import tensorflow as tf
@@ -36,13 +37,13 @@ class PipelineModel():
     
     def pipeline_transform(self, data):
         # raise ValueError("NOT IMPLEMENTED YET")
-        for action, args in self.pipeline_actions:
+        for action in self.pipeline_actions:
             tmp_data = action.transform(data)
         
         return tmp_data
             
     def apply_standard_scaling(self, tuple_args):
-        StSc = StandardScaler()
+        StSc = scaling_utils.STDScaler()
         self.pipeline_actions.append(StSc)
         self.pipeline_args.append(tuple_args)
     
