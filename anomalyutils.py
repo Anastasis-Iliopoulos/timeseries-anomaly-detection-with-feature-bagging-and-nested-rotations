@@ -3,13 +3,6 @@ from tabnanny import verbose
 import pandas as pd
 import numpy as np
 
-def set_random(seed_value):
-    # 3. Set `numpy` pseudo-random generator at a fixed value
-    np.random.seed(seed_value)
-
-set_random(0)
-
-
 def get_ae_residuals(data_true, data_predicted):
     return pd.DataFrame(data_true - data_predicted).abs().sum(axis=1)
 
