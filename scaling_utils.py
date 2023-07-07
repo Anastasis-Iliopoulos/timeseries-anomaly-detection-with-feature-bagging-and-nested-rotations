@@ -13,5 +13,5 @@ class STDScaler():
 
     def transform(self, df_data):
         transformed_data = self.StSc.transform(df_data)
-        transformed_data = pd.DataFrame(transformed_data, columns=[df_data.columns.tolist()[i] for i in self.subset], index=df_data.index)
+        transformed_data = pd.DataFrame(transformed_data, columns=df_data.columns, index=df_data.index)
         return transformed_data

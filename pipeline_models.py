@@ -27,18 +27,20 @@ class PipelineModel():
         self.pipeline_args = []
         self.model = None
     
-    def pipeline_fit(self, data):
-        # raise ValueError("NOT IMPLEMENTED YET")
+    def pipeline_fit(self, df_data):
+        tmp_data = df_data.copy(deep=True)
         for action, args in zip(self.pipeline_actions, self.pipeline_args):
             if len(args)==0:
-                action.fit(data)    
+                action.fit(tmp_data)
+                tmp_data = action.transform(tmp_data)    
             else:
-                action.fit(data, *args)
+                action.fit(tmp_data, *args)
+                tmp_data = action.transform(tmp_data)
     
-    def pipeline_transform(self, data):
-        # raise ValueError("NOT IMPLEMENTED YET")
+    def pipeline_transform(self, df_data):
+        tmp_data = df_data.copy(deep=True)
         for action in self.pipeline_actions:
-            tmp_data = action.transform(data)
+            tmp_data = action.transform(tmp_data)
         
         return tmp_data
             
