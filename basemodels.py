@@ -301,6 +301,7 @@ class AnomalyDetectionModel():
             predictions_ae = anomalyutils.get_ae_predicts(self.model, data)
             residuals_autoencoder = anomalyutils.get_ae_residuals(data, predictions_ae)
             prediction_labels_autoencoder = pd.DataFrame(pd.Series(residuals_autoencoder.values, index=df_data.index).fillna(0)).rename(columns={0:f"anomaly_by_autoencoder_{self.task_name}_score"})
+            prediction_labels_autoencoder["anomaly_by_autoencoder_{self.task_name}_ucl"] = self.UCL
             return prediction_labels_autoencoder
         elif self.model_name.upper() == "CONV_AE":
             data = df_data.to_numpy()
