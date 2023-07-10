@@ -111,7 +111,7 @@ def get_scores_from_residuals(original_X_data, residuals, N_STEPS, df_index):
 
     return prediction
 
-def get_actual_scores_for_windows(residuals, df, X_df, N_STEPS, UCL, name_of_score_col, name_of_ucl_col):
+def get_actual_scores_for_windows(residuals, df, X_df, N_STEPS, UCL, name_of_score_col, name_of_anomaly_col):
     anomalous_data = pd.DataFrame(pd.Series(residuals.values, index=df[N_STEPS-1:].index).fillna(0)).rename(columns={0:f"cur_score"})
 
     for ind in range(1,N_STEPS):
@@ -124,9 +124,9 @@ def get_actual_scores_for_windows(residuals, df, X_df, N_STEPS, UCL, name_of_sco
     all_data = data_to_append.join(anomalous_data)
     all_data = all_data.drop(["cur_score_init", "cur_score"], axis=1)
     all_data["min_score"] = all_data.min(axis=1, skipna=False).fillna(0)
-    all_data_with_anomalies = pd.DataFrame(pd.Series(all_data["min_score"].values, index=df.index).fillna(0)).rename(columns={0: name_of_score_col})
-    all_data_with_anomalies[name_of_ucl_col] = 3/2*UCL
-    final_df = all_data_with_anomalies[[name_of_score_col, name_of_ucl_col]]
+    final_df = pd.DataFrame(pd.Series(all_data["min_score"].values, index=df.index).fillna(0)).rename(columns={0: name_of_score_col})
+    final_df[name_of_anomaly_col] = (final_df[name_of_score_col] > (3/2)*UCL).astype(int)
+    final_df = final_df[[name_of_score_col, name_of_anomaly_col]]
     return final_df
 
 def get_actual_scores_for_windows_2(residuals, df, X_df, N_STEPS, name_of_score_col):
