@@ -4,10 +4,16 @@ from sklearn.decomposition import PCA
 
 class Rotator():
     """Rotator"""
-    def __init__(self):
+    def __init__(self, capture_info=False):
+        if capture_info not in [False, True]:
+            raise ValueError("capture_info should be of type bool either True or False")
+        
+        self.capture_info = capture_info
         self.if_fitted = False
         self.subsets = []
         self.rotation_matricies = []
+        self.varK=None
+        self.varfraction=None
 
 # StSc = StandardScaler()
 # StSc.fit(X_train)
@@ -60,6 +66,8 @@ class Rotator():
         return rotation_matrix
 
     def fit(self, df_data, K=2, fraction=0.75):
+        self.varK=K
+        self.varfraction=fraction
         data = df_data.to_numpy()
         a_partition, permutation = self.get_partitioned_data(data, K)
         self.subsets = permutation
@@ -69,7 +77,7 @@ class Rotator():
             self.rotation_matricies.append(rotation_matrix)
         return self
 
-    def transform(self, df_data):
+    def transform(self, df_data, infoWriter=None):
         data = df_data.to_numpy()
         transformed_partitions = []
         for sub, rotation_matrix in zip(self.subsets, self.rotation_matricies):
@@ -80,4 +88,12 @@ class Rotator():
         reverse_perm = self.reverse_permutation(self.subsets)
         transformed_data = transformed_data_unordered[:,reverse_perm]
         transformed_data = pd.DataFrame(transformed_data, columns=df_data.columns.tolist(), index=df_data.index)
+        
+        if self.capture_info:
+            infoWriter.nrpartitions = self.subsets
+            infoWriter.nrmatrices = self.rotation_matricies
+            infoWriter.nrK = self.varK
+            infoWriter.nrfranction = self.varfraction
+            infoWriter.nested_rotations = transformed_data
+        
         return transformed_data

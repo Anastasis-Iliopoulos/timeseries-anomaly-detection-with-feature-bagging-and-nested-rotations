@@ -3,7 +3,11 @@ import pandas as pd
 
 class FeatureBagger():
     """FeatureBagger"""
-    def __init__(self):
+    def __init__(self, capture_info=False):
+        if capture_info not in [False, True]:
+            raise ValueError("capture_info should be of type bool either True or False")
+
+        self.capture_info = capture_info
         self.if_fitted = False
         self.subset = []
 
@@ -13,8 +17,12 @@ class FeatureBagger():
         self.subset = sorted(np.random.choice(data.shape[1], number_of_features, replace=False).tolist())
         return self
 
-    def transform(self, df_data):
+    def transform(self, df_data, infoWriter = None):
         data = df_data.to_numpy()
         transformed_data = data[:,self.subset]
         transformed_data = pd.DataFrame(transformed_data, columns=[df_data.columns.tolist()[i] for i in self.subset], index=df_data.index)
+        
+        if self.capture_info:
+            infoWriter.fbsubset = self.subset
+        
         return transformed_data

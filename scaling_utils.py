@@ -4,7 +4,11 @@ from sklearn.preprocessing import StandardScaler
 
 class STDScaler():
     """FeatureBagger"""
-    def __init__(self):
+    def __init__(self, capture_info=False):
+        if capture_info not in [False, True]:
+            raise ValueError("capture_info should be of type bool either True or False")
+        
+        self.capture_info = False
         self.StSc = StandardScaler()
 
     def fit(self, df_data):

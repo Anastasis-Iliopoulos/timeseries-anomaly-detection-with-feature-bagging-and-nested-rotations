@@ -15,7 +15,11 @@ import utils
 import pandas as pd
 
 class AnomalyDetectionModel():
-    def __init__(self) -> None:
+    def __init__(self, capture_info=False) -> None:
+        if capture_info not in [False, True]:
+            raise ValueError("capture_info should be of type bool either True or False")
+        
+        self.capture_info = capture_info
         self.model_name = None
         self.model = None
         self.UCL = None
@@ -295,13 +299,17 @@ class AnomalyDetectionModel():
         else:
             raise NotImplemented(f"{self.model_name} Not implemnted yet!")
         
-    def transform(self, df_data):
+    def transform(self, df_data, infoWriter=None):
         if self.model_name.upper() == "AE":
             data = df_data.to_numpy()
             predictions_ae = anomalyutils.get_ae_predicts(self.model, data)
             residuals_autoencoder = anomalyutils.get_ae_residuals(data, predictions_ae)
             prediction_labels_autoencoder = pd.DataFrame(pd.Series(residuals_autoencoder.values, index=df_data.index).fillna(0)).rename(columns={0:f"anomaly_by_autoencoder_{self.task_name}_score"})
             prediction_labels_autoencoder["anomaly_by_autoencoder_{self.task_name}_ucl"] = self.UCL
+            
+            if self.capture_info:
+                infoWriter.scores_ucls_anomalies = prediction_labels_autoencoder
+            
             return prediction_labels_autoencoder
         elif self.model_name.upper() == "CONV_AE":
             data = df_data.to_numpy()
@@ -309,6 +317,10 @@ class AnomalyDetectionModel():
             predictions_conv_ae = anomalyutils.get_conv_ae_predicts(self.model, X_conv_ae)
             residuals_conv_ae = anomalyutils.get_conv_ae_residuals(X_conv_ae, predictions_conv_ae)
             df_final = utils.get_actual_scores_for_windows_2(residuals_conv_ae, df_data, X_conv_ae, 60, f"anomaly_by_conv_ae_{self.task_name}_score")
+            
+            if self.capture_info:
+                infoWriter.scores_ucls_anomalies = df_final
+
             return df_final
         elif self.model_name.upper() == "LSTM":
             X_all_rotated = df_data.to_numpy()
@@ -318,6 +330,10 @@ class AnomalyDetectionModel():
             prediction_labels_lstm = pd.DataFrame(pd.Series(residuals_lstm.values, index=df_data[5:].index).fillna(0)).rename(columns={0:f"anomaly_by_lstm_{self.task_name}_score"})
             df_to_append = pd.DataFrame(pd.Series(0, index=df_data[:5].index).fillna(0)).rename(columns={0:f"anomaly_by_lstm_{self.task_name}_score"})
             df_final = pd.concat([df_to_append, prediction_labels_lstm], ignore_index=False)
+            
+            if self.capture_info:
+                infoWriter.scores_ucls_anomalies = df_final
+
             return df_final
         elif self.model_name.upper() == "LSTM_AE":
             X_all_rotated = df_data.to_numpy()
@@ -325,6 +341,10 @@ class AnomalyDetectionModel():
             predictions_lstm_ae = anomalyutils.get_lstm_ae_predicts(self.model, X_lstm_ae)
             residuals_lstm_ae = anomalyutils.get_lstm_ae_residuals(X_lstm_ae, predictions_lstm_ae)
             df_final = utils.get_actual_scores_for_windows_2(residuals_lstm_ae, df_data, X_lstm_ae, 10, f"anomaly_by_lstm_ae_{self.task_name}_score")
+            
+            if self.capture_info:
+                infoWriter.scores_ucls_anomalies = df_final
+            
             return df_final
         elif self.model_name.upper() == "LSTM_VAE":
             X_all_rotated = df_data.to_numpy()
@@ -332,6 +352,10 @@ class AnomalyDetectionModel():
             predictions_lstm_vae = anomalyutils.get_lstm_vae_predicts(self.model, X_lstm_vae)
             residuals_lstm_vae = anomalyutils.get_lstm_vae_residuals(X_lstm_vae, predictions_lstm_vae)
             df_final = utils.get_actual_scores_for_windows_2(residuals_lstm_vae, df_data, X_lstm_vae, 5, f"anomaly_by_lstm_vae_{self.task_name}_score")
+            
+            if self.capture_info:
+                infoWriter.scores_ucls_anomalies = df_final
+            
             return df_final
         else:
             raise NotImplemented(f"{self.model_name} Not implemnted yet!")
