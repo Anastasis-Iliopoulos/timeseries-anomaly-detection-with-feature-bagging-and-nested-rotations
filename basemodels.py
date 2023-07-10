@@ -281,7 +281,7 @@ class AnomalyDetectionModel():
         elif self.model_name.upper() == "LSTM":
             X_lstm, y_lstm = utils.split_sequences(data, 5)
             self.model = self.lstm(X_lstm, y_lstm, f"{task_name}")
-            self.model.load_weights(f"{task_name}.h5")
+            self.model.load_weights(f"lstm_{task_name}.h5")
             predictions_lstm = anomalyutils.get_lstm_predicts(self.model, X_lstm)
             residuals_lstm = anomalyutils.get_lstm_residuals(y_lstm, predictions_lstm)
             self.UCL = residuals_lstm.quantile(0.99)

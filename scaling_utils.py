@@ -8,7 +8,7 @@ class STDScaler():
         if capture_info not in [False, True]:
             raise ValueError("capture_info should be of type bool either True or False")
         
-        self.capture_info = False
+        self.capture_info = capture_info
         self.StSc = StandardScaler()
 
     def fit(self, df_data):

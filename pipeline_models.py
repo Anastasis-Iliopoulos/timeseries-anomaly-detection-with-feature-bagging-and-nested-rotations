@@ -27,6 +27,7 @@ class PipelineModel():
         if capture_info not in [False, True]:
             raise ValueError("capture_info should be of type bool either True or False")
         
+        self.infoWriter_args = infoWriter_args
         self.pipeline_actions = []
         self.pipeline_args = []
         self.model = None
@@ -34,13 +35,16 @@ class PipelineModel():
     
     def pipeline_fit(self, df_data):
         tmp_data = df_data.copy(deep=True)
+        info_writer = None 
+        if self.capture_info:
+            info_writer = info_utils.InfoWriter(*self.infoWriter_args)
         for action, args in zip(self.pipeline_actions, self.pipeline_args):
             if len(args)==0:
                 action.fit(tmp_data)
-                tmp_data = action.transform(tmp_data)    
+                tmp_data = action.transform(tmp_data, info_writer)    
             else:
                 action.fit(tmp_data, *args)
-                tmp_data = action.transform(tmp_data)
+                tmp_data = action.transform(tmp_data, info_writer)
     
     def pipeline_transform(self, df_data):
         tmp_data = df_data.copy(deep=True)
