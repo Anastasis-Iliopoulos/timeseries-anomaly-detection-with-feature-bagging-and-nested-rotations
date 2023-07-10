@@ -337,7 +337,7 @@ class AnomalyDetectionModel():
             X_lstm_ae = utils.create_sequences(X_all_rotated, 10)
             predictions_lstm_ae = anomalyutils.get_lstm_ae_predicts(self.model, X_lstm_ae)
             residuals_lstm_ae = anomalyutils.get_lstm_ae_residuals(X_lstm_ae, predictions_lstm_ae)
-            df_final = utils.get_actual_scores_for_windows(residuals_lstm_ae, df_data, X_lstm_ae, 10, self.UCL, f"scores", "predicted_anomaly")
+            df_final = utils.get_actual_scores_for_windows(residuals_lstm_ae, df_data, X_lstm_ae, 10, self.UCL, "scores", "predicted_anomaly")
             
             if self.capture_info:
                 infoWriter.scores_ucls_anomalies = df_final
@@ -347,10 +347,12 @@ class AnomalyDetectionModel():
             X_lstm_vae = utils.create_sequences(X_all_rotated, 5)
             predictions_lstm_vae = anomalyutils.get_lstm_vae_predicts(self.model, X_lstm_vae)
             residuals_lstm_vae = anomalyutils.get_lstm_vae_residuals(X_lstm_vae, predictions_lstm_vae)
-            df_final = utils.get_actual_scores_for_windows(residuals_lstm_vae, df_data, X_lstm_vae, 5, self.UCL, f"scores", "predicted_anomaly")
+            df_final = utils.get_actual_scores_for_windows(residuals_lstm_vae, df_data, X_lstm_vae, 5, self.UCL, "scores", "predicted_anomaly")
             
             if self.capture_info:
                 infoWriter.scores_ucls_anomalies = df_final
             
         else:
             raise NotImplemented(f"{self.model_name} Not implemnted yet!")
+        
+        return df_final
