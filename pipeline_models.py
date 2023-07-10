@@ -49,7 +49,8 @@ class PipelineModel():
             info_writer = info_utils.InfoWriter(*self.infoWriter_args)
         for action in self.pipeline_actions:
             tmp_data = action.transform(tmp_data, info_writer)
-        
+        if self.capture_info:
+            info_writer.write_info()
         return tmp_data
             
     def apply_standard_scaling(self, tuple_args):
