@@ -14,7 +14,7 @@ class InfoWriter():
         self.data_name = data_name
 
         # DataFrame
-        self.scores_ucls_anomalies = None
+        self.scores_and_anomalies = None
         # DataFrame
         self.nested_rotations = None
         # DataFrame
@@ -31,13 +31,14 @@ class InfoWriter():
         self.fbsubset = None
         self.nrK = None
         self.nrfranction = None
+        self.UCL = None
         self.timers = None
         self.total_time = None
-        
+        self.steps_applied = None
 
 
     def write_info(self):
-        self.scores_ucls_anomalies.to_parquet(f"./{self.SAVE_FOLDER}/scores_ucls_anomalies.parquet.gzip", compression='gzip')
+        self.scores_and_anomalies.to_parquet(f"./{self.SAVE_FOLDER}/scores_and_anomalies.parquet.gzip", compression='gzip')
         self.nested_rotations.to_parquet(f"./{self.SAVE_FOLDER}/nested_rotations.parquet.gzip", compression='gzip')
         self.scalings.to_parquet(f"./{self.SAVE_FOLDER}/scalings.parquet.gzip", compression='gzip')
 

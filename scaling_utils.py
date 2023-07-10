@@ -15,7 +15,11 @@ class STDScaler():
         self.StSc.fit(df_data)
         return self
 
-    def transform(self, df_data):
+    def transform(self, df_data, infoWriter):
         transformed_data = self.StSc.transform(df_data)
         transformed_data = pd.DataFrame(transformed_data, columns=df_data.columns, index=df_data.index)
+        infoWriter.scvar = self.StSc.mean_
+        infoWriter.scmean = self.StSc.scale_
+        infoWriter.scscale = self.StSc.var_
+        infoWriter.scalings = transformed_data
         return transformed_data

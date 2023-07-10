@@ -308,7 +308,8 @@ class AnomalyDetectionModel():
             df_final = pd.DataFrame(pd.Series(residuals_autoencoder.values, index=df_data.index).fillna(0)).rename(columns={0:f"scores"})
             df_final["predicted_anomaly"] = (df_final["scores"] > (3/2)*self.UCL).astype(int)
             if self.capture_info:
-                infoWriter.scores_ucls_anomalies = df_final
+                infoWriter.scores_and_anomalies = df_final
+                infoWriter.UCL = self.UCL
             
         elif self.model_name.upper() == "CONV_AE":
             data = df_data.to_numpy()
@@ -318,7 +319,8 @@ class AnomalyDetectionModel():
             df_final = utils.get_actual_scores_for_windows(residuals_conv_ae, df_data, X_conv_ae, 60, self.UCL, "scores", "predicted_anomaly")
             
             if self.capture_info:
-                infoWriter.scores_ucls_anomalies = df_final
+                infoWriter.scores_and_anomalies = df_final
+                infoWriter.UCL = self.UCL
 
         elif self.model_name.upper() == "LSTM":
             X_all_rotated = df_data.to_numpy()
@@ -330,7 +332,8 @@ class AnomalyDetectionModel():
             df_final = pd.concat([df_to_append, prediction_labels_lstm], ignore_index=False)
             df_final["predicted_anomaly"] = (df_final["scores"] > (3/2) * self.UCL).astype(int)
             if self.capture_info:
-                infoWriter.scores_ucls_anomalies = df_final
+                infoWriter.scores_and_anomalies = df_final
+                infoWriter.UCL = self.UCL
 
         elif self.model_name.upper() == "LSTM_AE":
             X_all_rotated = df_data.to_numpy()
@@ -340,7 +343,8 @@ class AnomalyDetectionModel():
             df_final = utils.get_actual_scores_for_windows(residuals_lstm_ae, df_data, X_lstm_ae, 10, self.UCL, "scores", "predicted_anomaly")
             
             if self.capture_info:
-                infoWriter.scores_ucls_anomalies = df_final
+                infoWriter.scores_and_anomalies = df_final
+                infoWriter.UCL = self.UCL
             
         elif self.model_name.upper() == "LSTM_VAE":
             X_all_rotated = df_data.to_numpy()
@@ -350,7 +354,8 @@ class AnomalyDetectionModel():
             df_final = utils.get_actual_scores_for_windows(residuals_lstm_vae, df_data, X_lstm_vae, 5, self.UCL, "scores", "predicted_anomaly")
             
             if self.capture_info:
-                infoWriter.scores_ucls_anomalies = df_final
+                infoWriter.scores_and_anomalies = df_final
+                infoWriter.UCL = self.UCL
             
         else:
             raise NotImplemented(f"{self.model_name} Not implemnted yet!")
