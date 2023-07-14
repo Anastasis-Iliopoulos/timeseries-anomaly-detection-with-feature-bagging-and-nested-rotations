@@ -18,7 +18,7 @@ def set_random(seed_value):
 def run_pipeline_conv_ae(family_descr, task_label, list_of_df, seed):
     set_random(seed)
     for  tmp_file_ind, df in tqdm(enumerate(list_of_df), str(task_label)):
-        
+        # df_index in [4,6,8]
         tmp_model_obj = pipeline_models.PipelineModel(capture_info=True, infoWriter_args=["tmp_res", f"family_conv_ae_{family_descr}", f"model_name_{str(task_label)}", f"data_name_{str(tmp_file_ind).rjust(3,'0')}"])
         
         tmp_model_obj.apply_standard_scaling(())
