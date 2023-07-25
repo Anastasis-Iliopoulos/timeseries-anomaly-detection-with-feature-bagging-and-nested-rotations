@@ -154,6 +154,10 @@ cython_debug/
 
 # Personal
 tmp_res/
+tmp_res_*/
+tmp_res*/
+tmp_res_*
+tmp_res*
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can

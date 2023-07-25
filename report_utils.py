@@ -13,21 +13,21 @@ class DFconstants():
         self.parquet_suffix = 'parquet.gzip'
         self.NESTED_ROTATIONS = 'nested_rotations' 
         self.OTHER_INFO = 'other_info'
-        self.PARTITION_SUFFIX = 'partition_'
+        self.PARTITION_PREFIX = 'partition_'
         self.SCALINGS = 'scalings'
         self.SCORES_AND_ANOMALIES = 'scores_and_anomalies'
     def __str__(self) -> str:
         return f"""parquet_suffix = '.parquet.gzip'
 NESTED_ROTATIONS = 'nested_rotations' 
 OTHER_INFO = 'other_info'
-PARTITION_SUFFIX = 'partition_'
+PARTITION_PREFIX = 'partition_'
 SCALINGS = 'scalings'
 SCORES_AND_ANOMALIES = 'scores_and_anomalies'"""
     def __repr__(self) -> str:
          return f"""parquet_suffix = '.parquet.gzip'
 NESTED_ROTATIONS = 'nested_rotations' 
 OTHER_INFO = 'other_info'
-PARTITION_SUFFIX = 'partition_'
+PARTITION_PREFIX = 'partition_'
 SCALINGS = 'scalings'
 SCORES_AND_ANOMALIES = 'scores_and_anomalies'"""
          
