@@ -27,11 +27,11 @@ class Rotator():
         permutation_indexing = {}
         for i in permutation:
             permutation_indexing[permutation[i]] = i
-        reverse_permutation = []
+        reverse_permutation_list = []
         for i in range(len(permutation_indexing)):
-            reverse_permutation.append(permutation_indexing[i])
+            reverse_permutation_list.append(permutation_indexing[i])
 
-        return reverse_permutation
+        return reverse_permutation_list
 
     def get_partitioned_data(self, data, number_of_subsets):
         number_of_features = data.shape[1]
@@ -82,8 +82,8 @@ class Rotator():
         transformed_partitions = []
         for sub, rotation_matrix in zip(self.subsets, self.rotation_matricies):
             partition = np.array([data[:,i] for i in sub]).T
-            transformed_partitions.append(np.dot(partition, rotation_matrix))
-        
+            transformed_partitions.append(np.dot(partition, rotation_matrix.T))
+
         transformed_data_unordered = np.concatenate(transformed_partitions, axis=1)
         reverse_perm = self.reverse_permutation(self.subsets)
         transformed_data = transformed_data_unordered[:,reverse_perm]
