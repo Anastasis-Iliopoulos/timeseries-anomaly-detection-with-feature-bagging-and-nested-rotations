@@ -158,6 +158,10 @@ tmp_res_*/
 tmp_res*/
 tmp_res_*
 tmp_res*
+backup*
+backup/
+backup*/
+backup
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
