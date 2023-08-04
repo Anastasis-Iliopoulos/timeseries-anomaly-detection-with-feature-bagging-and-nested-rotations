@@ -307,7 +307,7 @@ class AnomalyDetectionModel():
             residuals_autoencoder = anomalyutils.get_ae_residuals(data, predictions_ae)
             df_final = pd.DataFrame(pd.Series(residuals_autoencoder.values, index=df_data.index).fillna(0)).rename(columns={0:f"scores"})
             df_final["predicted_anomaly"] = (df_final["scores"] > (3/2)*self.UCL).astype(int)
-            if self.capture_info:
+            if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
                 infoWriter.UCL = self.UCL
             
@@ -318,7 +318,7 @@ class AnomalyDetectionModel():
             residuals_conv_ae = anomalyutils.get_conv_ae_residuals(X_conv_ae, predictions_conv_ae)
             df_final = utils.get_actual_scores_for_windows(residuals_conv_ae, df_data, X_conv_ae, 60, self.UCL, "scores", "predicted_anomaly")
             
-            if self.capture_info:
+            if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
                 infoWriter.UCL = self.UCL
 
@@ -331,7 +331,7 @@ class AnomalyDetectionModel():
             df_to_append = pd.DataFrame(pd.Series(0, index=df_data[:5].index).fillna(0)).rename(columns={0:f"scores"})
             df_final = pd.concat([df_to_append, prediction_labels_lstm], ignore_index=False)
             df_final["predicted_anomaly"] = (df_final["scores"] > (3/2) * self.UCL).astype(int)
-            if self.capture_info:
+            if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
                 infoWriter.UCL = self.UCL
 
@@ -342,7 +342,7 @@ class AnomalyDetectionModel():
             residuals_lstm_ae = anomalyutils.get_lstm_ae_residuals(X_lstm_ae, predictions_lstm_ae)
             df_final = utils.get_actual_scores_for_windows(residuals_lstm_ae, df_data, X_lstm_ae, 10, self.UCL, "scores", "predicted_anomaly")
             
-            if self.capture_info:
+            if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
                 infoWriter.UCL = self.UCL
             
@@ -353,7 +353,7 @@ class AnomalyDetectionModel():
             residuals_lstm_vae = anomalyutils.get_lstm_vae_residuals(X_lstm_vae, predictions_lstm_vae)
             df_final = utils.get_actual_scores_for_windows(residuals_lstm_vae, df_data, X_lstm_vae, 5, self.UCL, "scores", "predicted_anomaly")
             
-            if self.capture_info:
+            if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
                 infoWriter.UCL = self.UCL
             

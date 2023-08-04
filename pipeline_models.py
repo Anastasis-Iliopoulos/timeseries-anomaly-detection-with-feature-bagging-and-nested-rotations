@@ -41,10 +41,10 @@ class PipelineModel():
         for action, args in zip(self.pipeline_actions, self.pipeline_args):
             if len(args)==0:
                 action.fit(tmp_data)
-                tmp_data = action.transform(tmp_data, info_writer)    
+                tmp_data = action.transform(tmp_data)    
             else:
                 action.fit(tmp_data, *args)
-                tmp_data = action.transform(tmp_data, info_writer)
+                tmp_data = action.transform(tmp_data)
     
     def pipeline_transform(self, df_data):
         tmp_data = df_data.copy(deep=True)

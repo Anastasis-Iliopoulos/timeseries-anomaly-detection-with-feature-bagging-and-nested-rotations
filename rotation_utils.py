@@ -89,7 +89,7 @@ class Rotator():
         transformed_data = transformed_data_unordered[:,reverse_perm]
         transformed_data = pd.DataFrame(transformed_data, columns=df_data.columns.tolist(), index=df_data.index)
         
-        if self.capture_info:
+        if (self.capture_info) and (infoWriter is not None):
             infoWriter.nrpartitions = self.subsets
             infoWriter.nrmatrices = self.rotation_matricies
             infoWriter.nrK = self.varK

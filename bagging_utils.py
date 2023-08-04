@@ -22,7 +22,7 @@ class FeatureBagger():
         transformed_data = data[:,self.subset]
         transformed_data = pd.DataFrame(transformed_data, columns=[df_data.columns.tolist()[i] for i in self.subset], index=df_data.index)
         
-        if self.capture_info:
+        if (self.capture_info) and (infoWriter is not None):
             infoWriter.fbsubset = self.subset
         
         return transformed_data
