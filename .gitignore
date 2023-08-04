@@ -167,6 +167,12 @@ backup*
 backup/
 backup*/
 backup
+data/*/info
+data/*/info*
+data/*/info/
+data/*/info*/
+data/*/info/*
+data/*/info*/*
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
