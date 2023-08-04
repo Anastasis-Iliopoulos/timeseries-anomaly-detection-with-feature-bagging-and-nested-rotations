@@ -11,3 +11,5 @@ arimafd
 tsad
 tqdm
 shap
+pyarrow
+pyreadr
