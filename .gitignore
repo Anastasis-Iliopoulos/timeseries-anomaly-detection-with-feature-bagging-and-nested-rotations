@@ -153,6 +153,11 @@ dmypy.json
 cython_debug/
 
 # Personal
+tmp_*/
+tmp_/
+tmp_*
+tmp_
+tmp_res/
 tmp_res/
 tmp_res_*/
 tmp_res*/
