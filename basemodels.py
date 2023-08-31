@@ -24,6 +24,9 @@ class AnomalyDetectionModel():
         self.model = None
         self.UCL = None
         self.anomaly_col = None
+        self.window_size = None
+        self.ucl_percentile = None
+        self.ucl_multiplier = None
 
     ## AE
     def autoencoder(self, data):
@@ -262,41 +265,49 @@ class AnomalyDetectionModel():
         )
         return model
     
-    def fit(self, df_data, model_name, task_name):
+    def fit(self, df_data, model_name, task_name, window_size, ucl_percentile, ucl_multiplier):
         """define task_name for checkpoints of lstm"""
         self.model_name = model_name
+        self.window_size = window_size
+        self.ucl_percentile = ucl_percentile
+        self.ucl_multiplier = ucl_multiplier
 
         data = df_data.to_numpy()
         if self.model_name.upper() == "AE":
             self.model = self.autoencoder(data)
             predictions_ae = anomalyutils.get_ae_predicts(self.model, data)
             residuals_autoencoder = anomalyutils.get_ae_residuals(data, predictions_ae)
-            self.UCL = residuals_autoencoder.quantile(0.99)
+            # 0.99
+            self.UCL = residuals_autoencoder.quantile(self.ucl_percentile)
         elif self.model_name.upper() == "CONV_AE":
-            X_conv_ae = utils.create_sequences(data, 60)
+            X_conv_ae = utils.create_sequences(data, self.window_size)
             self.model = self.conv_ae(X_conv_ae)
             predictions_conv_ae = anomalyutils.get_conv_ae_predicts(self.model, X_conv_ae)
             residuals_conv_ae = anomalyutils.get_conv_ae_residuals(X_conv_ae, predictions_conv_ae)
-            self.UCL = residuals_conv_ae.quantile(0.999)
+            # 0.999
+            self.UCL = residuals_conv_ae.quantile(self.ucl_percentile)
         elif self.model_name.upper() == "LSTM":
-            X_lstm, y_lstm = utils.split_sequences(data, 5)
+            X_lstm, y_lstm = utils.split_sequences(data, self.window_size)
             self.model = self.lstm(X_lstm, y_lstm, f"{task_name}")
             self.model.load_weights(f"lstm_{task_name}.h5")
             predictions_lstm = anomalyutils.get_lstm_predicts(self.model, X_lstm)
             residuals_lstm = anomalyutils.get_lstm_residuals(y_lstm, predictions_lstm)
-            self.UCL = residuals_lstm.quantile(0.99)
+            # 0.99
+            self.UCL = residuals_lstm.quantile(self.ucl_percentile)
         elif self.model_name.upper() == "LSTM_AE":
-            X_lstm_ae = utils.create_sequences(data, 10)
+            X_lstm_ae = utils.create_sequences(data, self.window_size)
             self.model = self.lstm_ae(X_lstm_ae)
             predictions_lstm_ae = anomalyutils.get_lstm_ae_predicts(self.model, X_lstm_ae)
             residuals_lstm_ae = anomalyutils.get_lstm_ae_residuals(X_lstm_ae, predictions_lstm_ae)
-            self.UCL = residuals_lstm_ae.quantile(0.99)
+            # 0.99
+            self.UCL = residuals_lstm_ae.quantile(self.ucl_percentile)
         elif self.model_name.upper() == "LSTM_VAE":
-            X_lstm_vae = utils.create_sequences(data, 5)
+            X_lstm_vae = utils.create_sequences(data, self.window_size)
             self.model = self.lstm_vae(X_lstm_vae)
             predictions_lstm_vae = anomalyutils.get_lstm_vae_predicts(self.model, X_lstm_vae)
             residuals_lstm_vae = anomalyutils.get_lstm_vae_residuals(X_lstm_vae, predictions_lstm_vae)
-            self.UCL = residuals_lstm_vae.quantile(0.999)
+            # 0.999
+            self.UCL = residuals_lstm_vae.quantile(self.ucl_percentile)
         else:
             raise NotImplemented(f"{self.model_name} Not implemnted yet!")
         
@@ -306,17 +317,17 @@ class AnomalyDetectionModel():
             predictions_ae = anomalyutils.get_ae_predicts(self.model, data)
             residuals_autoencoder = anomalyutils.get_ae_residuals(data, predictions_ae)
             df_final = pd.DataFrame(pd.Series(residuals_autoencoder.values, index=df_data.index).fillna(0)).rename(columns={0:f"scores"})
-            df_final["predicted_anomaly"] = (df_final["scores"] > (3/2)*self.UCL).astype(int)
+            df_final["predicted_anomaly"] = (df_final["scores"] > (self.ucl_multiplier)*self.UCL).astype(int)
             if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
                 infoWriter.UCL = self.UCL
             
         elif self.model_name.upper() == "CONV_AE":
             data = df_data.to_numpy()
-            X_conv_ae = utils.create_sequences(data, 60)
+            X_conv_ae = utils.create_sequences(data, self.window_size)
             predictions_conv_ae = anomalyutils.get_conv_ae_predicts(self.model, X_conv_ae)
             residuals_conv_ae = anomalyutils.get_conv_ae_residuals(X_conv_ae, predictions_conv_ae)
-            df_final = utils.get_actual_scores_for_windows(residuals_conv_ae, df_data, X_conv_ae, 60, self.UCL, "scores", "predicted_anomaly")
+            df_final = utils.get_actual_scores_for_windows_v4(residuals_conv_ae, df_data, self.window_size, self.UCL, "scores", "predicted_anomaly", self.ucl_multiplier)
             
             if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
@@ -324,23 +335,23 @@ class AnomalyDetectionModel():
 
         elif self.model_name.upper() == "LSTM":
             X_all_rotated = df_data.to_numpy()
-            X_lstm, y_lstm = utils.split_sequences(X_all_rotated, 5)
+            X_lstm, y_lstm = utils.split_sequences(X_all_rotated, self.window_size)
             predictions_lstm = anomalyutils.get_lstm_predicts(self.model, X_lstm)
             residuals_lstm = anomalyutils.get_lstm_residuals(y_lstm, predictions_lstm)
-            prediction_labels_lstm = pd.DataFrame(pd.Series(residuals_lstm.values, index=df_data[5:].index).fillna(0)).rename(columns={0:f"scores"})
-            df_to_append = pd.DataFrame(pd.Series(0, index=df_data[:5].index).fillna(0)).rename(columns={0:f"scores"})
+            prediction_labels_lstm = pd.DataFrame(pd.Series(residuals_lstm.values, index=df_data[self.window_size:].index).fillna(0)).rename(columns={0:f"scores"})
+            df_to_append = pd.DataFrame(pd.Series(0, index=df_data[:self.window_size].index).fillna(0)).rename(columns={0:f"scores"})
             df_final = pd.concat([df_to_append, prediction_labels_lstm], ignore_index=False)
-            df_final["predicted_anomaly"] = (df_final["scores"] > (3/2) * self.UCL).astype(int)
+            df_final["predicted_anomaly"] = (df_final["scores"] > (self.ucl_multiplier) * self.UCL).astype(int)
             if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
                 infoWriter.UCL = self.UCL
 
         elif self.model_name.upper() == "LSTM_AE":
             X_all_rotated = df_data.to_numpy()
-            X_lstm_ae = utils.create_sequences(X_all_rotated, 10)
+            X_lstm_ae = utils.create_sequences(X_all_rotated, self.window_size)
             predictions_lstm_ae = anomalyutils.get_lstm_ae_predicts(self.model, X_lstm_ae)
             residuals_lstm_ae = anomalyutils.get_lstm_ae_residuals(X_lstm_ae, predictions_lstm_ae)
-            df_final = utils.get_actual_scores_for_windows(residuals_lstm_ae, df_data, X_lstm_ae, 10, self.UCL, "scores", "predicted_anomaly")
+            df_final = utils.get_actual_scores_for_windows_v4(residuals_lstm_ae, df_data, self.window_size, self.UCL, "scores", "predicted_anomaly", self.ucl_multiplier)
             
             if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final
@@ -348,10 +359,10 @@ class AnomalyDetectionModel():
             
         elif self.model_name.upper() == "LSTM_VAE":
             X_all_rotated = df_data.to_numpy()
-            X_lstm_vae = utils.create_sequences(X_all_rotated, 5)
+            X_lstm_vae = utils.create_sequences(X_all_rotated, self.window_size)
             predictions_lstm_vae = anomalyutils.get_lstm_vae_predicts(self.model, X_lstm_vae)
             residuals_lstm_vae = anomalyutils.get_lstm_vae_residuals(X_lstm_vae, predictions_lstm_vae)
-            df_final = utils.get_actual_scores_for_windows(residuals_lstm_vae, df_data, X_lstm_vae, 5, self.UCL, "scores", "predicted_anomaly")
+            df_final = utils.get_actual_scores_for_windows_v4(residuals_lstm_vae, df_data, self.window_size, self.UCL, "scores", "predicted_anomaly", self.ucl_multiplier)
             
             if (self.capture_info) and (infoWriter is not None):
                 infoWriter.scores_and_anomalies = df_final

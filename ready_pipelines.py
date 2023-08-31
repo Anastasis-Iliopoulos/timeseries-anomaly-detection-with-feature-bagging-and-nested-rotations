@@ -26,3 +26,16 @@ def run_pipeline_conv_ae_for_new_data_1(SAVE_FOLDER, nr_subsets, nr_percentage ,
     tmp_model_obj.pipeline_fit(data_df[:500])
     final_df = tmp_model_obj.pipeline_transform(data_df)
     return 1
+
+def run_pipeline_custom_electr(SAVE_FOLDER, name_of_model, nr_subsets, nr_percentage, window_size, ucl_percentile, ucl_multiplier, family_descr, task_label, list_of_df, seed):
+    set_random(seed)
+    for  tmp_file_ind, df in tqdm(enumerate(list_of_df), str(task_label)):
+        tmp_model_obj = pipeline_models.PipelineModel(capture_info=True, infoWriter_args=[SAVE_FOLDER, f"family_{name_of_model}_{family_descr}", f"model_name_{str(task_label)}", f"data_name_{str(tmp_file_ind).rjust(3,'0')}"])
+        
+        tmp_model_obj.apply_standard_scaling(())
+        tmp_model_obj.apply_feature_bagging(())
+        tmp_model_obj.apply_nested_rotations((nr_subsets, nr_percentage))
+        tmp_model_obj.apply_model((name_of_model, f"model_name_{str(task_label)}", window_size, ucl_percentile, ucl_multiplier))
+        tmp_model_obj.pipeline_fit(df[:4500*20].drop(['anomaly'], axis=1))
+        final_df = tmp_model_obj.pipeline_transform(df.drop(['anomaly'], axis=1))
+    return 1
